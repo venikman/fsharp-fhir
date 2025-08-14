@@ -7,7 +7,7 @@ type Encounter = {
     resource : DomainResource
     identifier : Identifier list
     status : EncounterStatus
-    class : Coding option
+    ``class`` : Coding option
     subject : Reference option
     period : Period option
 }

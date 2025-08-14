@@ -1,4 +1,4 @@
-namespace FSharpFHIR.Creator
+module FSharpFHIR.Creator
 
 open System
 

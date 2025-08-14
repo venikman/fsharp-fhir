@@ -1,4 +1,4 @@
-namespace FSharpFHIR.Cli
+module FSharpFHIR.Cli
 
 open System
 open FSharpFHIR.Validator

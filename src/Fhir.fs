@@ -81,7 +81,7 @@ type DomainResource = {
 // See: https://hl7.org/fhir/datatypes.html#Identifier
 
 type Identifier = {
-    use : IdentifierUse option
+    ``use`` : IdentifierUse option
     system : FhirUri option
     value : FhirString option
 }
@@ -96,7 +96,7 @@ and IdentifierUse =
 // See: https://hl7.org/fhir/datatypes.html#HumanName
 
 type HumanName = {
-    use : NameUse option
+    ``use`` : NameUse option
     text : FhirString option
     family : FhirString option
     given : FhirString list
@@ -149,6 +149,6 @@ type Reference = {
 
 type Period = {
     start : FhirDateTime option
-    end : FhirDateTime option
+    ``end`` : FhirDateTime option
 }
 

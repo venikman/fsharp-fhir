@@ -1,6 +1,16 @@
 # FSharpFHIR
 
-A basic FHIR domain model and CLI validator written in F#.
+This repository provides a foundational set of tools for working with FHIR (Fast Healthcare Interoperability Resources) using the F# programming language.
+
+## Components
+
+The repository is composed of three main parts:
+
+1.  **Core F# Library (`src/`)**: The heart of the project. It defines a domain model by translating parts of the official FHIR specification into F# types. This includes definitions for various FHIR resources like `Patient`, `Observation`, and `Condition`.
+
+2.  **Validation CLI (`cli/`)**: A command-line tool that performs basic validation on a FHIR resource stored in a JSON file. It checks that the file contains valid JSON and that the JSON has a `resourceType` field.
+
+3.  **Resource Creation CLI (`creator/`)**: Another command-line tool that can generate a simple `Patient` resource as a JSON object.
 
 ## Building
 
@@ -52,4 +62,3 @@ DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet run --project creator -- create patient --n
 ```
 
 The JSON is printed to stdout. Supply `--out path/to/file.json` to write it to disk.
-

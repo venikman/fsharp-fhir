@@ -1,0 +1,5 @@
+[Bb]in/
+[Oo]bj/
+
+# Ignore the .NET installation script
+dotnet-install.sh

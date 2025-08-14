@@ -1,50 +1,43 @@
 namespace FSharpFHIR.Creator
 
 open System
-open FSharpFHIR
-open Charm
 
-module Program =
-    /// Command that creates a simple Patient resource as JSON
-    let patientCommand =
-        cmd "patient" {
-            desc "Create a minimal Patient resource"
-            opt "name" { desc "Patient name" }
-            opt "gender" { desc "Gender (male|female|other|unknown)" }
-            opt "birthDate" { desc "Birth date (YYYY-MM-DD)" }
-            opt "out" { desc "Output file (defaults to stdout)" }
-            run (fun ctx ->
-                let name = ctx?name |> Option.ofObj |> Option.map string
-                let gender = ctx?gender |> Option.ofObj |> Option.map string
-                let birth = ctx?birthDate |> Option.ofObj |> Option.map string
-                let outFile = ctx?out |> Option.ofObj |> Option.map string
+/// Simple CLI for generating minimal Patient resources
+[<EntryPoint>]
+let main argv =
+    let rec parse opts args =
+        match args with
+        | "--name" :: v :: rest -> parse (("name", v)::opts) rest
+        | "--gender" :: v :: rest -> parse (("gender", v)::opts) rest
+        | "--birthDate" :: v :: rest -> parse (("birthDate", v)::opts) rest
+        | "--out" :: v :: rest -> parse (("out", v)::opts) rest
+        | _ -> Map.ofList opts
 
-                // Build minimal Patient JSON
-                let parts =
-                    [ Some "\"resourceType\":\"Patient\"";
-                      name |> Option.map (fun n -> $"\"name\":[{{\"text\":\"{n}\"}}]");
-                      gender |> Option.map (fun g -> $"\"gender\":\"{g}\"");
-                      birth |> Option.map (fun b -> $"\"birthDate\":\"{b}\"") ]
-                    |> List.choose id
-                let json = "{" + String.Join(",", parts) + "}"
+    let argsList = Array.toList argv
+    match argsList with
+    | "create" :: "patient" :: tail ->
+        let opts = parse [] tail
+        let name = Map.tryFind "name" opts
+        let gender = Map.tryFind "gender" opts
+        let birth = Map.tryFind "birthDate" opts
+        let outFile = Map.tryFind "out" opts
 
-                match outFile with
-                | Some path ->
-                    System.IO.File.WriteAllText(path, json)
-                    printfn "Wrote Patient resource to %s" path
-                    0
-                | None ->
-                    printfn "%s" json
-                    0)
-        }
+        let parts =
+            [ Some "\"resourceType\":\"Patient\"";
+              name |> Option.map (fun n -> $"\"name\":[{{\"text\":\"{n}\"}}]");
+              gender |> Option.map (fun g -> $"\"gender\":\"{g}\"");
+              birth |> Option.map (fun b -> $"\"birthDate\":\"{b}\"") ]
+            |> List.choose id
+        let json = "{" + String.Join(",", parts) + "}"
 
-    /// Root create command
-    let createCommand =
-        cmd "create" {
-            desc "Create FHIR resources"
-            cmd patientCommand
-        }
-
-    [<EntryPoint>]
-    let main argv =
-        run createCommand argv
+        match outFile with
+        | Some path ->
+            System.IO.File.WriteAllText(path, json)
+            printfn "Wrote Patient resource to %s" path
+            0
+        | None ->
+            printfn "%s" json
+            0
+    | _ ->
+        printfn "Usage: create patient [--name <name>] [--gender <gender>] [--birthDate <YYYY-MM-DD>] [--out <file>]"
+        1

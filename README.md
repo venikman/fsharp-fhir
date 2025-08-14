@@ -19,8 +19,6 @@ DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet build creator/FSharpFHIR.Creator.fsproj
 
 ## CLI Usage
 
-The CLIs use the [Charm](https://charm.land/) library.
-
 ### Validate a resource
 
 To validate a JSON file containing a FHIR resource run:

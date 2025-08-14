@@ -7,7 +7,6 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Charm" Version="0.5.0" />
     <ProjectReference Include="../src/FSharpFHIR.fsproj" />
   </ItemGroup>
 </Project>

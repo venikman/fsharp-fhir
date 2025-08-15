@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="ResourceValidation.fs" />
+    <Compile Include="Cli.fs" />
+    <Compile Include="PrimitiveSerializationTests.fs" />
+    <Compile Include="ResourceValidationTests.fs" />
+    <Compile Include="CliTests.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Expecto" Version="9.0.4" />
+    <PackageReference Include="Expecto.TestAdapter" Version="9.0.4" />
+  </ItemGroup>
+</Project>

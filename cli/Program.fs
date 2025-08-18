@@ -1,15 +1,31 @@
 module FSharpFHIR.Cli
 
 open System
+open System.CommandLine
 open FSharpFHIR.Validator
 
 /// Enhanced validator CLI that tests FHIR types
 [<EntryPoint>]
 let main argv =
-    let args = Array.toList argv
-    match args with
-    | "validate" :: "--file" :: file :: rest ->
-        let verbose = List.contains "--verbose" rest
+    // Create the root command
+    let rootCommand = RootCommand("Validates a FHIR resource JSON file against F# type definitions.")
+    
+    // Create the validate command
+    let validateCommand = Command("validate", "Validate a FHIR resource JSON file")
+    
+    // Create options
+    let fileOption = Option<string>("--file", "Path to the JSON file to validate")
+    fileOption.IsRequired <- true
+    
+    let verboseOption = Option<bool>("--verbose", "Show additional information about valid resources")
+    verboseOption.SetDefaultValue(false)
+    
+    // Add options to the validate command
+    validateCommand.AddOption(fileOption)
+    validateCommand.AddOption(verboseOption)
+    
+    // Set the handler for the validate command
+    validateCommand.SetHandler(Action<string, bool>(fun file verbose ->
         let errors = Validator.validateFile file
         if List.isEmpty errors then
             printfn "✓ Resource is valid"
@@ -19,26 +35,15 @@ let main argv =
                     printfn "  Resource type: %s" resourceType
                     printfn "  Details: %s" info
                 | Error _ -> ()
-            0
+            Environment.Exit(0)
         else
             printfn "✗ Validation errors:"
             errors |> List.iter (printfn "  - %s")
-            1
-    | "validate" :: "--help" :: _ ->
-        printfn "Usage: validate --file <path> [--verbose]"
-        printfn ""
-        printfn "Validates a FHIR resource JSON file against F# type definitions."
-        printfn ""
-        printfn "Options:"
-        printfn "  --file <path>    Path to the JSON file to validate"
-        printfn "  --verbose        Show additional information about valid resources"
-        printfn "  --help           Show this help message"
-        0
-    | [] | ["validate"] ->
-        printfn "Usage: validate --file <path> [--verbose]"
-        printfn "Use 'validate --help' for more information."
-        1
-    | _ ->
-        printfn "Usage: validate --file <path> [--verbose]"
-        printfn "Use 'validate --help' for more information."
-        1
+            Environment.Exit(1)
+    ), fileOption, verboseOption)
+    
+    // Add the validate command to the root command
+    rootCommand.AddCommand(validateCommand)
+    
+    // Invoke the command
+    rootCommand.Invoke(argv)

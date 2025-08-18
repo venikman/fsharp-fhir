@@ -1,43 +1,56 @@
 module FSharpFHIR.Creator
 
 open System
+open System.CommandLine
 
 /// Simple CLI for generating minimal Patient resources
 [<EntryPoint>]
 let main argv =
-    let rec parse opts args =
-        match args with
-        | "--name" :: v :: rest -> parse (("name", v)::opts) rest
-        | "--gender" :: v :: rest -> parse (("gender", v)::opts) rest
-        | "--birthDate" :: v :: rest -> parse (("birthDate", v)::opts) rest
-        | "--out" :: v :: rest -> parse (("out", v)::opts) rest
-        | _ -> Map.ofList opts
-
-    let argsList = Array.toList argv
-    match argsList with
-    | "create" :: "patient" :: tail ->
-        let opts = parse [] tail
-        let name = Map.tryFind "name" opts
-        let gender = Map.tryFind "gender" opts
-        let birth = Map.tryFind "birthDate" opts
-        let outFile = Map.tryFind "out" opts
-
+    // Create the root command
+    let rootCommand = RootCommand("Generate minimal FHIR resources as JSON.")
+    
+    // Create the create command
+    let createCommand = Command("create", "Create a FHIR resource")
+    
+    // Create the patient subcommand
+    let patientCommand = Command("patient", "Create a Patient resource")
+    
+    // Create options for patient
+    let nameOption = Option<string>("--name", "Name of the patient")
+    let genderOption = Option<string>("--gender", "Gender of the patient")
+    let birthDateOption = Option<string>("--birthDate", "Birth date of the patient (YYYY-MM-DD)")
+    let outOption = Option<string>("--out", "Output file path (prints to stdout if not specified)")
+    
+    // Add options to the patient command
+    patientCommand.AddOption(nameOption)
+    patientCommand.AddOption(genderOption)
+    patientCommand.AddOption(birthDateOption)
+    patientCommand.AddOption(outOption)
+    
+    // Set the handler for the patient command
+    patientCommand.SetHandler(Action<string, string, string, string>(fun name gender birthDate outFile ->
         let parts =
             [ Some "\"resourceType\":\"Patient\"";
-              name |> Option.map (fun n -> $"\"name\":[{{\"text\":\"{n}\"}}]");
-              gender |> Option.map (fun g -> $"\"gender\":\"{g}\"");
-              birth |> Option.map (fun b -> $"\"birthDate\":\"{b}\"") ]
+              if not (String.IsNullOrEmpty name) then Some $"\"name\":[{{\"text\":\"{name}\"}}]" else None;
+              if not (String.IsNullOrEmpty gender) then Some $"\"gender\":\"{gender}\"" else None;
+              if not (String.IsNullOrEmpty birthDate) then Some $"\"birthDate\":\"{birthDate}\"" else None ]
             |> List.choose id
         let json = "{" + String.Join(",", parts) + "}"
 
-        match outFile with
-        | Some path ->
-            System.IO.File.WriteAllText(path, json)
-            printfn "Wrote Patient resource to %s" path
-            0
-        | None ->
+        if not (String.IsNullOrEmpty outFile) then
+            System.IO.File.WriteAllText(outFile, json)
+            printfn "Wrote Patient resource to %s" outFile
+            Environment.Exit(0)
+        else
             printfn "%s" json
-            0
-    | _ ->
-        printfn "Usage: create patient [--name <name>] [--gender <gender>] [--birthDate <YYYY-MM-DD>] [--out <file>]"
-        1
+            Environment.Exit(0)
+    ), nameOption, genderOption, birthDateOption, outOption)
+    
+    // Add the patient command to the create command
+    createCommand.AddCommand(patientCommand)
+    
+    // Add the create command to the root command
+    rootCommand.AddCommand(createCommand)
+    
+    // Invoke the command
+    rootCommand.Invoke(argv)

@@ -44,7 +44,81 @@ module JsonSerialization =
         | "other" -> Some AdministrativeGender.Other
         | "unknown" -> Some AdministrativeGender.Unknown
         | _ -> None
+        
+    /// Parse observation status from string
+    let parseObservationStatus (status: string) =
+        match status.ToLowerInvariant() with
+        | "registered" -> Some ObservationStatus.Registered
+        | "preliminary" -> Some ObservationStatus.Preliminary
+        | "final" -> Some ObservationStatus.Final
+        | "amended" -> Some ObservationStatus.Amended
         | _ -> None
+    
+    /// Try to parse an Observation resource from JSON
+    let tryParseObservation (element: JsonElement) : Result<Observation, string list> =
+        let errors = ResizeArray<string>()
+        
+        // Check resource type
+        match tryGetProperty "resourceType" element with
+        | Some rt when (tryGetString rt) = Some "Observation" -> ()
+        | Some _ -> errors.Add("Expected resourceType 'Observation'")
+        | None -> errors.Add("Missing required 'resourceType' property")
+        
+        // Parse basic resource properties
+        let id = tryGetProperty "id" element |> Option.bind tryGetString
+        let meta = None // Simplified for now
+        let language = tryGetProperty "language" element |> Option.bind tryGetString
+        
+        let resource = {
+            id = id
+            meta = meta
+            language = language
+        }
+        
+        let domainResource = {
+            resource = resource
+            text = None // Simplified for now
+            contained = []
+            extension = []
+            modifierExtension = []
+        }
+        
+        // Parse required status field
+        let status = 
+            match tryGetProperty "status" element |> Option.bind tryGetString with
+            | Some statusStr ->
+                match parseObservationStatus statusStr with
+                | Some status -> Some status
+                | None -> 
+                    errors.Add(sprintf "Invalid observation status: '%s'" statusStr)
+                    None
+            | None ->
+                errors.Add("Missing required 'status' property")
+                None
+        
+        // Parse optional fields
+        let code = None // Simplified for now - would parse CodeableConcept
+        let subject = None // Simplified for now - would parse Reference
+        let effective = tryGetProperty "effective" element |> Option.bind tryGetDateTime
+        let value = None // Simplified for now - would parse ElementValue
+        
+        if errors.Count > 0 then
+            Error (errors |> Seq.toList)
+        else
+            match status with
+            | Some validStatus ->
+                let observation = {
+                    resource = domainResource
+                    identifier = [] // Simplified for now
+                    status = validStatus
+                    code = code
+                    subject = subject
+                    effective = effective
+                    value = value
+                }
+                Ok observation
+            | None ->
+                Error ["Invalid observation status"]
     
     /// Try to parse a Patient resource from JSON
     let tryParsePatient (element: JsonElement) : Result<Patient, string list> =
@@ -135,6 +209,10 @@ module JsonSerialization =
             | Some "Patient" ->
                 match tryParsePatient root with
                 | Ok patient -> Ok ("Patient", box patient)
+                | Error errors -> Error errors
+            | Some "Observation" ->
+                match tryParseObservation root with
+                | Ok observation -> Ok ("Observation", box observation)
                 | Error errors -> Error errors
             | Some resourceType ->
                 Error [sprintf "Resource type '%s' is not yet supported for full validation" resourceType]

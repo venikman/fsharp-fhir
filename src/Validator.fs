@@ -49,6 +49,18 @@ module Validator =
                             |> Option.defaultValue "No name specified"
                         sprintf "Patient resource with name: %s" nameInfo
                     | _ -> "Patient resource"
+                | "Observation" ->
+                    // We know this is an Observation based on the resource type
+                    match resource with
+                    | :? Observation as observation ->
+                        let statusStr = 
+                            match observation.status with
+                            | ObservationStatus.Registered -> "registered"
+                            | ObservationStatus.Preliminary -> "preliminary"  
+                            | ObservationStatus.Final -> "final"
+                            | ObservationStatus.Amended -> "amended"
+                        sprintf "Observation resource with status: %s" statusStr
+                    | _ -> "Observation resource"
                 | _ -> sprintf "%s resource" resourceType
             Ok (resourceType, info)
         | Error errors ->

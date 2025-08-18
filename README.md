@@ -103,6 +103,16 @@ The JSON is printed to stdout. Supply `--out path/to/file.json` to write it to d
 For detailed usage information:
 
 ```bash
+# Get general help for the validator CLI
+DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet run --project cli -- --help
+
+# Get help for the validate command
 DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet run --project cli -- validate --help
+
+# Get general help for the creator CLI
+DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet run --project creator -- --help
+
+# Get help for the create patient command
+DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet run --project creator -- create patient --help
 ```
 

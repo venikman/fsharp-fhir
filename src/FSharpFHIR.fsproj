@@ -27,6 +27,9 @@
     <Compile Include="Procedure.fs" />
     <Compile Include="ServiceRequest.fs" />
     <Compile Include="JsonSerialization.fs" />
+    <Compile Include="QueryEngine.fs" />
+    <Compile Include="InteractiveRepl.fs" />
     <Compile Include="Validator.fs" />
+    <Compile Include="Visualizer.fs" />
   </ItemGroup>
 </Project>

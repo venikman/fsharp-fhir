@@ -1,6 +1,7 @@
 namespace FSharpFHIR
 
 open System
+open System.IO
 open System.Text.Json
 
 module JsonSerialization =

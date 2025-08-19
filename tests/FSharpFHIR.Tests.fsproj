@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="TestHelpers.fs" />
+    <Compile Include="QueryEngineTests.fs" />
+    <Compile Include="ValidatorTests.fs" />
+    <Compile Include="VisualizerTests.fs" />
+    <Compile Include="JsonSerializationTests.fs" />
+    <Compile Include="FHIRResourceTests.fs" />
+    <Compile Include="IntegrationTests.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Expecto" Version="10.2.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="YoloDev.Expecto.TestSdk" Version="0.14.2" />
+    <PackageReference Include="FSharp.Data" Version="6.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../src/FSharpFHIR.fsproj" />
+  </ItemGroup>
+
+</Project>

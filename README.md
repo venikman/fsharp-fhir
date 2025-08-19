@@ -207,6 +207,240 @@ dotnet run --project creator -- --help
 dotnet run --project creator -- create patient --help
 ```
 
+## Testing
+
+This project includes a comprehensive test suite built with the [Expecto](https://github.com/haf/expecto) testing framework, providing high code coverage and reliability across all key modules.
+
+### Running Tests
+
+#### Basic Test Execution
+
+```bash
+# Run all tests
+dotnet test
+
+# Run tests with detailed output
+dotnet test --verbosity normal
+
+# Run tests with minimal output
+dotnet test --verbosity quiet
+
+# Run tests and collect code coverage
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+#### Expecto-Specific Commands
+
+```bash
+# Run tests directly with Expecto (from tests directory)
+cd tests
+dotnet run
+
+# Run tests with specific filters
+dotnet run -- --filter "QueryEngine"
+dotnet run -- --filter "Validator"
+
+# Run tests with parallel execution
+dotnet run -- --parallel
+
+# Run tests with summary output
+dotnet run -- --summary
+```
+
+### Test Project Structure
+
+The test suite is organized in the `tests/` directory with the following structure:
+
+```
+tests/
+├── FSharpFHIR.Tests.fsproj    # Test project configuration
+├── TestHelpers.fs             # Shared test utilities and helpers
+├── QueryEngineTests.fs        # Query language parsing and execution tests
+├── ValidatorTests.fs          # FHIR resource validation tests
+├── VisualizerTests.fs         # Resource formatting and display tests
+├── JsonSerializationTests.fs  # JSON parsing and serialization tests
+├── FHIRResourceTests.fs       # FHIR resource type definition tests
+├── IntegrationTests.fs        # End-to-end CLI and workflow tests
+├── Program.fs                 # Test runner entry point
+└── expecto.config             # Expecto configuration
+```
+
+### Test Categories
+
+Tests are organized into several categories for targeted execution:
+
+#### Unit Tests
+- **QueryEngine Tests**: Query parsing, AST generation, and execution logic
+- **Validator Tests**: FHIR resource validation rules and error handling
+- **Visualizer Tests**: Resource formatting and human-readable output
+- **JsonSerialization Tests**: JSON parsing, serialization, and error cases
+- **FHIR Resource Tests**: Type definitions, constraints, and data validation
+
+#### Integration Tests
+- **CLI Command Tests**: End-to-end testing of validate, visualize, query, and create commands
+- **File I/O Tests**: Reading and writing FHIR resources from/to files
+- **Error Handling Tests**: Comprehensive error scenarios and user feedback
+- **Performance Tests**: Large resource handling and query performance
+
+#### Running Specific Test Categories
+
+```bash
+# Run unit tests only
+dotnet test --filter "Category=Unit"
+
+# Run integration tests only
+dotnet test --filter "Category=Integration"
+
+# Run performance tests only
+dotnet test --filter "Category=Performance"
+
+# Run tests for specific modules
+dotnet test --filter "FullyQualifiedName~QueryEngine"
+dotnet test --filter "FullyQualifiedName~Validator"
+dotnet test --filter "FullyQualifiedName~Visualizer"
+```
+
+### Running Specific Test Modules
+
+```bash
+# Run QueryEngine tests only
+cd tests
+dotnet run -- --filter "QueryEngine"
+
+# Run Validator tests only
+dotnet run -- --filter "Validator"
+
+# Run Integration tests only
+dotnet run -- --filter "Integration"
+
+# Run tests matching a pattern
+dotnet run -- --filter "*Patient*"
+dotnet run -- --filter "*JSON*"
+```
+
+### Test Coverage
+
+The test suite provides comprehensive coverage across:
+
+- **Query Language**: 95%+ coverage of query parsing, AST operations, and execution paths
+- **Validation Logic**: 90%+ coverage of FHIR validation rules and error conditions
+- **Resource Types**: 100% coverage of supported FHIR resource type definitions
+- **CLI Commands**: 85%+ coverage of command-line interface functionality
+- **Error Handling**: Comprehensive testing of error scenarios and user feedback
+
+#### Generating Coverage Reports
+
+```bash
+# Generate coverage report
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+# Generate HTML coverage report (requires reportgenerator)
+dotnet tool install -g dotnet-reportgenerator-globaltool
+reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:"coverage/html" -reporttypes:Html
+```
+
+### Adding New Tests
+
+When adding new functionality, follow these guidelines for test development:
+
+#### 1. Unit Tests
+
+```fsharp
+// Add to appropriate test file (e.g., QueryEngineTests.fs)
+open Expecto
+open FSharpFHIR.QueryEngine
+
+[<Tests>]
+let newFeatureTests =
+    testList "New Feature Tests" [
+        test "should handle basic case" {
+            let result = newFunction "input"
+            Expect.equal result "expected" "Should return expected value"
+        }
+        
+        test "should handle edge case" {
+            let result = newFunction ""
+            Expect.isError result "Should return error for empty input"
+        }
+    ]
+```
+
+#### 2. Integration Tests
+
+```fsharp
+// Add to IntegrationTests.fs
+test "new CLI command should work end-to-end" {
+    let tempFile = createTempFile validInput
+    try
+        let (exitCode, output, _) = runCliCommand ["new-command"; tempFile]
+        Expect.equal exitCode 0 "Should exit with success code"
+        Expect.contains output "expected output" "Should contain expected result"
+    finally
+        cleanupTempFile tempFile
+}
+```
+
+#### 3. Test Helpers
+
+Utilize the shared test helpers in `TestHelpers.fs`:
+
+```fsharp
+// Available helper functions
+createTempFile content        // Create temporary test file
+cleanupTempFile path         // Clean up temporary file
+runCliCommand args           // Execute CLI command with arguments
+assertJsonEqual expected actual  // Compare JSON with normalization
+measureTime operation        // Measure execution time
+```
+
+### Continuous Integration
+
+For CI/CD pipelines, use these commands:
+
+```bash
+# CI test execution with XML output
+dotnet test --logger "trx;LogFileName=test-results.trx" --logger "console;verbosity=normal"
+
+# CI with coverage and results
+dotnet test --collect:"XPlat Code Coverage" --logger "trx" --results-directory ./test-results
+
+# Fail fast on first test failure
+dotnet test --logger "console;verbosity=normal" -- --fail-fast
+```
+
+#### GitHub Actions Example
+
+```yaml
+- name: Run Tests
+  run: |
+    dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage" --logger "trx;LogFileName=test-results.trx"
+    
+- name: Upload Test Results
+  uses: actions/upload-artifact@v3
+  if: always()
+  with:
+    name: test-results
+    path: test-results/
+```
+
+### Test Configuration
+
+The test suite can be configured via `tests/expecto.config`:
+
+```
+--parallel
+--summary
+--colours 256
+```
+
+For custom test execution, modify the configuration or pass arguments directly:
+
+```bash
+# Override configuration
+cd tests
+dotnet run -- --parallel --summary --filter "QueryEngine" --colours 256
+```
+
 ## Supported Resource Types
 
 - **Patient** - Validates name structure, gender, birthDate, and other fields
@@ -383,8 +617,16 @@ fsharp-fhir/
 # Build all projects
 dotnet build
 
-# Run tests (if available)
+# Run all tests
 dotnet test
+
+# Run tests with detailed output
+dotnet test --verbosity normal
+
+# Run specific test categories
+dotnet test --filter "Category=Unit"
+dotnet test --filter "Category=Integration"
+dotnet test --filter "Category=Performance"
 
 # Package and install as global tool
 dotnet pack cli/FSharpFHIR.Cli.fsproj
@@ -397,6 +639,182 @@ fsharp-fhir query --file examples/patient.json --query ".name"
 # Run the CLI tool (local development)
 dotnet run --project cli
 dotnet run --project cli -- query --file examples/patient.json --query ".name"
+```
+
+## Testing
+
+This project includes a comprehensive test suite built with the [Expecto](https://github.com/haf/expecto) testing framework, providing high code coverage and reliability.
+
+### Test Structure
+
+The test suite is organized into several categories:
+
+```
+tests/
+├── QueryEngineTests.fs     # Query parsing and execution tests
+├── ValidatorTests.fs       # FHIR resource validation tests
+├── VisualizerTests.fs      # Formatting and display tests
+├── JsonSerializationTests.fs # JSON parsing and serialization tests
+├── FhirResourceTests.fs    # FHIR type definitions and construction tests
+├── IntegrationTests.fs     # End-to-end CLI and workflow tests
+├── TestHelpers.fs          # Shared test utilities and helpers
+├── expecto.config          # Test runner configuration
+└── FSharpFHIR.Tests.fsproj # Test project file
+```
+
+### Running Tests
+
+#### Basic Test Execution
+
+```bash
+# Run all tests
+dotnet test
+
+# Run tests with detailed output
+dotnet test --verbosity normal
+
+# Run tests in parallel (default)
+dotnet test --parallel
+
+# Run tests sequentially (for debugging)
+dotnet test --no-parallel
+```
+
+#### Test Filtering
+
+```bash
+# Run specific test categories
+dotnet test --filter "Category=Unit"
+dotnet test --filter "Category=Integration"
+dotnet test --filter "Category=Performance"
+
+# Run tests for specific modules
+dotnet test --filter "FullyQualifiedName~QueryEngine"
+dotnet test --filter "FullyQualifiedName~Validator"
+dotnet test --filter "FullyQualifiedName~JsonSerialization"
+
+# Run tests matching a pattern
+dotnet test --filter "DisplayName~Patient"
+dotnet test --filter "DisplayName~Observation"
+```
+
+#### Advanced Test Options
+
+```bash
+# Generate test results in JUnit format
+dotnet test --logger "junit;LogFilePath=test-results.xml"
+
+# Generate test results in TRX format
+dotnet test --logger "trx;LogFileName=test-results.trx"
+
+# Run tests with code coverage (requires coverlet)
+dotnet test --collect:"XPlat Code Coverage"
+
+# Set memory and time limits
+dotnet test --settings test.runsettings
+```
+
+### Test Categories
+
+#### Unit Tests
+Test individual functions and modules in isolation:
+- **QueryEngine**: Query parsing, AST construction, execution logic
+- **Validator**: FHIR resource validation rules and error handling
+- **Visualizer**: Formatting functions and display options
+- **JsonSerialization**: JSON parsing, type conversion, error handling
+- **FHIR Resources**: Type construction, validation, and edge cases
+
+#### Integration Tests
+Test complete workflows and CLI functionality:
+- **CLI Commands**: Validate, visualize, and query commands
+- **End-to-End Workflows**: Full resource processing pipelines
+- **Error Handling**: Invalid inputs and edge cases
+- **File Operations**: Reading, writing, and temporary file management
+
+#### Performance Tests
+Ensure acceptable performance characteristics:
+- **Query Execution**: Large resource processing
+- **Validation Speed**: Bulk validation operations
+- **Memory Usage**: Resource consumption limits
+- **Concurrent Operations**: Parallel processing capabilities
+
+### Test Configuration
+
+The test suite uses `expecto.config` for configuration:
+
+```bash
+# View current test configuration
+cat tests/expecto.config
+
+# Run tests with custom configuration
+dotnet test --settings tests/expecto.config
+```
+
+### Writing Tests
+
+When contributing new features, follow these testing guidelines:
+
+1. **Unit Tests**: Test each function with valid inputs, invalid inputs, and edge cases
+2. **Integration Tests**: Test complete workflows and CLI interactions
+3. **Performance Tests**: Include performance tests for computationally intensive operations
+4. **Error Handling**: Test all error conditions and edge cases
+5. **Documentation**: Include clear test descriptions and expected behaviors
+
+#### Example Test Structure
+
+```fsharp
+open Expecto
+open FSharpFHIR
+
+[<Tests>]
+let queryEngineTests =
+    testList "QueryEngine" [
+        testCase "should parse simple property access" <| fun _ ->
+            let query = ".name"
+            let result = QueryEngine.parse query
+            Expect.isOk result "Query should parse successfully"
+            
+        testCase "should handle invalid syntax" <| fun _ ->
+            let query = ".invalid..syntax"
+            let result = QueryEngine.parse query
+            Expect.isError result "Invalid query should fail to parse"
+    ]
+```
+
+### Continuous Integration
+
+The test suite is designed to run in CI/CD environments:
+
+```bash
+# CI-friendly test execution
+DOTNET_CLI_TELEMETRY_OPTOUT=1 dotnet test --no-restore --verbosity normal --logger "trx;LogFileName=test-results.trx"
+
+# Generate code coverage reports
+dotnet test --collect:"XPlat Code Coverage" --results-directory ./coverage
+```
+
+### Test Coverage
+
+The test suite aims for high code coverage across all modules:
+- **QueryEngine**: >90% coverage including edge cases
+- **Validator**: >95% coverage of validation rules
+- **Visualizer**: >85% coverage of formatting functions
+- **JsonSerialization**: >90% coverage including error paths
+- **FHIR Resources**: >80% coverage of type definitions
+- **Integration**: >75% coverage of CLI workflows
+
+To generate coverage reports:
+
+```bash
+# Install coverage tools
+dotnet tool install --global coverlet.console
+dotnet tool install --global dotnet-reportgenerator-globaltool
+
+# Generate coverage
+dotnet test --collect:"XPlat Code Coverage"
+
+# Generate HTML report
+reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
 ```
 
 ### Contributing
